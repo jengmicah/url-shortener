@@ -2,9 +2,10 @@ const path = require('path');
 const express = require('express');
 const morgan = require('morgan');
 const helmet = require('helmet');
-const yup = require('yup');
 const mongoose = require('mongoose');
 const { nanoid } = require('nanoid');
+const UrlSlugSchema = require('./models/UrlSlug');
+const Redirect = require('./models/Redirect');
 
 require('dotenv').config();
 
@@ -16,41 +17,43 @@ app.use(express.json());
 
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: false }));
+app.set('views', './src/views');
 
-// Connect to MongoDB
-mongoose
-  .connect(
-    'mongodb://mongo:27017/node-app',
-    { useNewUrlParser: true }
-  )
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => console.log(err));
+const MONGO_URI = 'mongodb://mongo:27017/node-app';
+try {
+  // Connect to MongoDB
+  mongoose
+    .connect(MONGO_URI, { useNewUrlParser: true })
+    .then(() => console.log('MongoDB Connected'))
+    .catch(err => { throw new Error(err) });
+} catch (error) {
+  next(error)
+}
 
-// app.get('/', (req, res) => {
-//   res.json({ "response": "root" })
-// });
-
-const urlSchema = yup.object().shape({
-  slug: yup.string().trim().matches(/^[\w\-]+$/i),
-  url: yup.string().trim().url().required(),
+app.get('/', (req, res) => {
+  Redirect.find()
+    .then(redirects => res.render('index', { redirects }))
+    .catch(err => res.status(404).json({ msg: 'No redirects found' }));
 });
 
 app.post('/shortenUrl', async (req, res, next) => {
   let { slug, url } = req.body;
   try {
-    await urlSchema.validate({ slug, url });
+    await UrlSlugSchema.validate({ slug, url });
     // Validate URL
     if (url.includes(process.env.URI)) {
       throw new Error(`Try not to create a loop`);
     }
     // Validate slug
     slug = slug || nanoid(5);
-    // TODO: check mongo for duplicates
-    const newRedirect = { slug, url };
-    // TODO: add slug and redirect to mongo
-    res.json(newRedirect);
+    // Check mongo for duplicates
+    const isDuplicate = await Redirect.findOne({ slug });
+    if (isDuplicate) throw new Error('Slug in use');
+    // Add redirect to Mongo
+    const newRedirect = new Redirect({ slug, url });
+    newRedirect.save().then(redirect => res.json(redirect));
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 });
 
@@ -61,8 +64,16 @@ app.get('/:slug', async (req, res, next) => {
     // TODO: Redirect to that URL
   } catch (error) {
     // TODO: Or else, throw 404
-    console.log(error);
+    next(error);
   }
+});
+
+app.use((error, req, res, next) => {
+  res.status(error.status || 500);
+  res.json({
+    message: error.message,
+    stack: process.env.NODE_ENV === 'production' ? '🥞' : error.stack,
+  });
 });
 
 const port = 3000;
