@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
-import * as dotenv from "dotenv";
-dotenv.config();
+import { vars } from "./vars";
 
 const MONGO_URI: string = "mongodb://mongo:27017/node-app";
 
@@ -10,8 +9,8 @@ mongoose.connection.on("error", (err: any) => {
   process.exit(-1);
 });
 
-// print mongoose logs in dev env
-if (process.env.NODE_ENV === "development") {
+// Print mongoose logs in dev env
+if (vars.env === "development") {
   mongoose.set("debug", true);
 }
 
