@@ -16,4 +16,6 @@ const RedirectSchema = new Schema({
   }
 });
 
+RedirectSchema.index({ slug: 1 }, { unique: true })
+
 module.exports = Redirect = mongoose.model('Redirect', RedirectSchema);

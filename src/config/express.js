@@ -13,6 +13,8 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: false }));
 app.set('views', './src/views');
 
+app.use('/', routes);
+
 app.use((error, req, res, next) => {
     res.status(error.status || 500);
     res.json({
@@ -20,7 +22,5 @@ app.use((error, req, res, next) => {
         stack: process.env.NODE_ENV === 'production' ? '' : error.stack,
     });
 });
-
-app.use('/', routes);
 
 module.exports = app;

@@ -15,19 +15,29 @@ router.get('/', (req, res) => {
 router.post('/shortenUrl', async (req, res, next) => {
     let { slug, url } = req.body;
     try {
+        // Validate URL/slug
         await UrlSlugSchema.validate({ slug, url });
-        // Validate URL
         if (url.includes(server.uri)) {
-            throw new Error(`Try not to create a loop`);
+            throw new Error(`${url} might create a loop`);
         }
-        // Validate slug
         slug = slug || nanoid(5);
-        // Check mongo for duplicates
-        const exists = await Redirect.findOne({ slug });
-        if (exists) throw new Error(`Slug in use`);
         // Add redirect to Mongo
         const newRedirect = new Redirect({ slug, url });
-        newRedirect.save().then(redirect => res.json(redirect));
+        newRedirect.save()
+            // Return saved redirect
+            .then(redirect => res.json(redirect))
+            // Check for duplicate error (rely on database integrity to avoid race condition)
+            .catch(error => {
+                const isDuplicateError = error.name === 'MongoError' && error.code === 11000;
+                if (isDuplicateError) {
+                    const duplicateError = new Error(`${slug} is in use`);
+                    duplicateError.status = 409;
+                    next(duplicateError);
+                }
+                else {
+                    next(error);
+                }
+            });
     } catch (error) {
         next(error);
     }
@@ -39,8 +49,7 @@ router.get('/:slug', async (req, res, next) => {
         // Get url mapped to the slug and redirect
         const redirect = await Redirect.findOne({ slug });
         if (redirect) return res.redirect(redirect.url);
-        // if (redirect) res.json(redirect);
-        else throw new Error(`Redirect doesn't exist`);
+        else throw new Error(`${slug} redirect doesn't exist`);
     } catch (error) {
         next(error);
     }
