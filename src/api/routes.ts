@@ -8,10 +8,17 @@ import { Request, Response, NextFunction } from "express";
 
 const router = express.Router();
 
+// router.get("/", (req: Request, res: Response) => {
+//   Redirect.find()
+//     .then((redirects: IRedirect[]) => res.render("index", { redirects }))
+//     .catch(() => res.status(404).json({ msg: "No redirects found" }));
+// });
+
 router.get("/", (req: Request, res: Response) => {
-  Redirect.find()
-    .then((redirects: IRedirect[]) => res.render("index", { redirects }))
-    .catch(() => res.status(404).json({ msg: "No redirects found" }));
+  Redirect.find().then((redirects: IRedirect[]) =>
+    res.render("pages/index", { redirects, serverUri: vars.server.uri })
+  );
+  //   res.render("pages/index");
 });
 
 router.post(
