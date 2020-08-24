@@ -9,11 +9,6 @@
 
   <body>
     <h1>URL Redirects</h1>
-    <form method="post" action="/shortenUrl">
-      <label for="name">Name</label>
-      <input type="text" name="name" />
-      <input type="submit" value="Add" />
-    </form>
     <h4>Items:</h4>
     <ul>
       <% redirects.forEach(function(redirect) { %>
@@ -22,6 +17,5 @@
       </li>
       <% }); %>
     </ul>
-    <script src="app.js"></script>
   </body>
 </html>
