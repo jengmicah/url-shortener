@@ -18,11 +18,10 @@ router.get("/", (req: Request, res: Response) => {
   Redirect.find().then((redirects: IRedirect[]) =>
     res.render("pages/index", { redirects, serverUri: vars.server.uri })
   );
-  //   res.render("pages/index");
 });
 
 router.post(
-  "/shortenUrl",
+  "/shorten",
   async (req: Request, res: Response, next: NextFunction) => {
     let { slug } = req.body;
     const { url } = req.body;
@@ -31,6 +30,10 @@ router.post(
       // Validate URL/slug
       await UrlSlugSchema.validate({ slug, url });
       if (url.includes(vars.server.uri)) {
+        res.render("pages/loop", {
+          redirect: { slug, url },
+          serverUri: vars.server.uri,
+        });
         throw new Error(`${url} might create a loop`);
       }
       slug = slug || nanoid(5);
@@ -39,9 +42,15 @@ router.post(
       newRedirect
         .save()
         // Return saved redirect
-        .then((redirect: IRedirect) => res.json(redirect))
+        .then((redirect: IRedirect) =>
+          res.render("pages/success", { redirect, serverUri: vars.server.uri })
+        )
         // Check for duplicate error (rely on database integrity to avoid race condition)
         .catch((error: any) => {
+          res.render("pages/duplicate", {
+            redirect: { slug, url },
+            serverUri: vars.server.uri,
+          });
           const isDuplicateError =
             error.name === "MongoError" && error.code === 11000;
           if (isDuplicateError) {
