@@ -30,3 +30,4 @@ Built with NodeJS, TypeScript, and MongoDB.
     - The exposed port in `Dockerfile` corresponds with the exposed **container** port in `docker-compose.yml` (host:**container**) as well as the server port specified in `src/index.ts`.
   - Set `NODE_ENV` to `development` or `production`
 - Run `./_build.sh` to run the `docker-compose.yml`
+  - May need to run `chmod +x _build.sh` beforehand
