@@ -23,7 +23,7 @@ Built with NodeJS, TypeScript, and MongoDB.
 
 ## Quick Start
 
-- Clone this repo: git clone https://github.com/jengmicah/url-shortener.git
+- Clone this repo: `git clone https://github.com/jengmicah/url-shortener.git`
 - Duplicate `.env.example` and rename to `.env`
   - Set `SERVER_URI` to server host
     - Note that the port of `SERVER_URI` corresponds with the exposed **host** port in `docker-compose.yml` (**host**:container)
