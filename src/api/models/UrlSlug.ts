@@ -3,7 +3,7 @@ import * as Yup from "yup";
 const UrlSlugSchema = Yup.object().shape({
   slug: Yup.string()
     .trim()
-    .matches(/^[\w\-]+$/i),
+    .matches(/^$|^[\w\-]+$/i),
   url: Yup.string()
     .trim()
     .matches(
